@@ -2,7 +2,26 @@ var debug = false;
 var tabs_in_action = {}; // tab store
 var tabs_in_action_clear_timer; //pointer;
 var tabs_in_action_clear_interval = 1 * 60 * 1000; //1 min
-var enabled = localStorage.getItem("enabled", true);
+var default_whitelist = ["http://yandex.ru/yandsearch", "https://yandex.ru/yandsearch", "https://www.google.ru", "https://www.google.com"];
+var enabled = localStorage.getItem("enabled") == "true";
+var whitelist = localStorage.getItem("whitelist");
+if (enabled === null) {
+  enabled = true;
+}
+if (!whitelist) {
+  whitelist = default_whitelist;
+}
+
+function inWhitelist(url) {
+  for (var i in whitelist) {
+    console.log(url + " == " + whitelist[i]);
+    if (url.indexOf(whitelist[i]) == 0) {
+      console.log("match");
+      return true;
+    }
+  }
+  return false;
+}
 
 function getBossAndActiveTabs(tabs) {
   var boss, active;
@@ -29,7 +48,9 @@ function getBossAndActiveTabs(tabs) {
 function liteNormalize(url, slash) {
   //cut to path
   if (url.indexOf("?") > 0) {
-    url = url.substr(0, url.lastIndexOf('?'));
+    url = url.substr(0, url.indexOf('?'));
+  } else {
+    url = url.substr(0, url.lastIndexOf("/"));
   }
   if (slash) {
     if (url.charAt(url.length - 1) == "/") {
@@ -53,6 +74,10 @@ function eco(boss, active, opener) { //no opener dependencies yet
   }
   debug && console.log("boss == active : " + (boss.id == active.id));
   if (boss.id != active.id) {
+    if (inWhitelist(boss.url)) {
+      debug && console.log("whitelisted", boss.url);
+      return;
+    }
     try {
       delete tabs_in_action["tab" + active.id];
       delete tabs_in_action["tab" + boss.id];
@@ -72,13 +97,16 @@ function collapseAll() {
       for (var i in result) {
         tab = result[i];
         url = liteNormalize(tab.url, true);
+        console.log("url: " + url)
         if (!bossTabs[url]) {
           bossTabs[url] = tab;
           tabs_in_action["tab" + tab.id] = Date.now();
+          /*} else if (inWhitelist(url)) {
+          debug && console.log("whitelisted", active.url); */
         } else {
           if (tab.active) {
             chrome.tabs.update(bossTabs[url].id, {
-              'url': url,
+              'url': tab.url,
               'selected': true
             });
           }
@@ -171,10 +199,10 @@ chrome.tabs.onUpdated.addListener(onTabUpdate);
 function iconOnClick(tab) {
   enabled = !enabled;
   localStorage.setItem("enabled", true);
-  updateState();
+  updateState(false);
 }
 
-function updateState() {
+function updateState(firstRun) {
   var icon = enabled ? "icon38.png" : "icon38off.png";
   var details = {
     'path': icon
@@ -185,12 +213,14 @@ function updateState() {
   clearInterval(tabs_in_action_clear_timer);
   if (enabled) {
     tabs_in_action_clear_timer = setInterval(clearTabsInAction, tabs_in_action_clear_interval);
-    collapseAll();
+    if (!firstRun) {
+      collapseAll();
+    }
   } else {
     clearTabsInAction();
   }
 }
 
-updateState();
+updateState(true);
 
 chrome.browserAction.onClicked.addListener(iconOnClick);
