@@ -1,7 +1,7 @@
 {
     "name": "Eco",
-    "description": "Collapse equal tabs to single tab. Any bugs? Submit to dsfox@yandex-team.ru",
-    "version": "0.0.1",
+    "description": "Collapse equal tabs to single tab.",
+    "version": "0.1.0",
     "manifest_version": 2,
     "icons": {
         "128": "icon128.png"
