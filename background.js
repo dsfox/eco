@@ -2,7 +2,7 @@ var debug = false;
 var tabs_in_action = {}; // tab store
 var tabs_in_action_clear_timer; //pointer;
 var tabs_in_action_clear_interval = 1 * 60 * 1000; //1 min
-var default_whitelist = ["http://yandex.ru/yandsearch", "https://yandex.ru/yandsearch", "https://www.google.ru", "https://www.google.com"];
+var default_whitelist = ["http://yandex.ru/yandsearch", "https://yandex.ru/yandsearch", "https://www.google.ru/#", "https://www.google.com/#"];
 var enabled = localStorage.getItem("enabled") == "true";
 var whitelist = localStorage.getItem("whitelist");
 if (enabled === null) {
