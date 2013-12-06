@@ -2,7 +2,7 @@ var debug = false;
 var tabs_in_action = {}; // tab store
 var tabs_in_action_clear_timer; //pointer;
 var tabs_in_action_clear_interval = 1 * 60 * 1000; //1 min
-var enabled = localStorage.getItem("enabled", false);
+var enabled = localStorage.getItem("enabled", true);
 
 function getBossAndActiveTabs(tabs) {
   var boss, active;
