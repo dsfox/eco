@@ -1,6 +1,8 @@
 var debug = false;
 var tabs_in_action = {}; // tab store
+var tabs_in_action_clear_timer; //pointer;
 var tabs_in_action_clear_interval = 1 * 60 * 1000; //1 min
+var enabled = localStorage.getItem("enabled", false);
 
 function getBossAndActiveTabs(tabs) {
   var boss, active;
@@ -62,6 +64,33 @@ function eco(boss, active, opener) { //no opener dependencies yet
   }
 }
 
+function collapseAll() {
+  function callback(result) {
+    var tab, url;
+    var bossTabs = {};
+    if (result && result.length > 0) {
+      for (var i in result) {
+        tab = result[i];
+        url = liteNormalize(tab.url, true);
+        if (!bossTabs[url]) {
+          bossTabs[url] = tab;
+          tabs_in_action["tab" + tab.id] = Date.now();
+        } else {
+          if (tab.active) {
+            chrome.tabs.update(bossTabs[url].id, {
+              'url': url,
+              'selected': true
+            });
+          }
+          chrome.tabs.remove(tab.id);
+        }
+      }
+    }
+    delete bossTabs;
+  }
+  chrome.tabs.query({}, callback);
+}
+
 function clearTabsInAction() {
   var ts, tabs_to_delete = [];
   var now = Date.now();
@@ -78,12 +107,18 @@ function clearTabsInAction() {
 }
 
 function onTabUpdate(tabId, changes, tab) {
+  if (!enabled) {
+    return;
+  }
   if (tabs_in_action.hasOwnProperty("tab" + tabId)) {
     onTabCreated(tab);
   }
 }
 
 function onTabCreated(tab) {
+  if (!enabled) {
+    return;
+  }
   var url = liteNormalize(tab.url, true);
   var attempt = 2;
   url += "*";
@@ -131,4 +166,31 @@ function onTabCreated(tab) {
 chrome.tabs.onCreated.addListener(onTabCreated);
 chrome.tabs.onUpdated.addListener(onTabUpdate);
 
-setInterval(clearTabsInAction, tabs_in_action_clear_interval);
+//toolbar button actions
+
+function iconOnClick(tab) {
+  enabled = !enabled;
+  localStorage.setItem("enabled", true);
+  updateState();
+}
+
+function updateState() {
+  var icon = enabled ? "icon38.png" : "icon38off.png";
+  var details = {
+    'path': icon
+  };
+
+  chrome.browserAction.setIcon(details, function() {});
+
+  clearInterval(tabs_in_action_clear_timer);
+  if (enabled) {
+    tabs_in_action_clear_timer = setInterval(clearTabsInAction, tabs_in_action_clear_interval);
+    collapseAll();
+  } else {
+    clearTabsInAction();
+  }
+}
+
+updateState();
+
+chrome.browserAction.onClicked.addListener(iconOnClick);

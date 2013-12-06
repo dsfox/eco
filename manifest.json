@@ -1,15 +1,16 @@
 {
-    "name": "Eco",
-    "description": "Collapse equal tabs to single tab.",
-    "version": "0.1.0",
-    "manifest_version": 2,
-    "icons": {
-        "128": "icon128.png"
-    },
-    "default_locale": "ru",
-    "offline_enabled": true,
-    "permissions": ["tabs"],
-    "background": {
-        "page": "background.html"
-    }
+  "name": "Eco",
+  "description": "Collapse equal tabs to single tab.",
+  "version": "0.1.0",
+  "manifest_version": 2,
+  "icons": {
+    "128": "icon128.png"
+  },
+  "default_locale": "ru",
+  "offline_enabled": true,
+  "permissions": ["tabs"],
+  "background": {
+    "page": "background.html"
+  },
+  "browser_action": {}
 }
