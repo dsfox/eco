@@ -84,8 +84,11 @@ function eco(boss, active, opener) { //no opener dependencies yet
     } catch (e) {
       debug && console.log("unable to delete ids", active.id, boss.id);
     }
-    chrome.tabs.update(boss.id, params);
     chrome.tabs.remove(active.id);
+    chrome.tabs.update(boss.id, params);
+    chrome.tabs.move(boss.id, {
+      index: -1
+    });
   }
 }
 
