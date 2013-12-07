@@ -1,22 +1,17 @@
-var debug = false;
 var tabs_in_action = {}; // tab store
 var tabs_in_action_clear_timer; //pointer;
 var tabs_in_action_clear_interval = 1 * 60 * 1000; //1 min
 var default_whitelist = ["http://yandex.ru/yandsearch", "https://yandex.ru/yandsearch", "https://www.google.ru/#", "https://www.google.com/#"];
-var enabled = localStorage.getItem("enabled") == "true";
+var enabled = localStorage.getItem("enabled") != "false";
 var whitelist = localStorage.getItem("whitelist");
-if (enabled === null) {
-  enabled = true;
-}
+
 if (!whitelist) {
   whitelist = default_whitelist;
 }
 
 function inWhitelist(url) {
   for (var i in whitelist) {
-    console.log(url + " == " + whitelist[i]);
     if (url.indexOf(whitelist[i]) == 0) {
-      console.log("match");
       return true;
     }
   }
@@ -66,24 +61,20 @@ function liteNormalize(url, slash) {
 
 function eco(boss, active, opener) { //no opener dependencies yet
   var params = {
-    selected: true
+    selected: true,
+    active: true
   };
-  debug && console.log("boss.url == active.url : " + (boss.url == active.url));
   if (boss.url != active.url) {
     params.url = active.url;
   }
-  debug && console.log("boss == active : " + (boss.id == active.id));
   if (boss.id != active.id) {
     if (inWhitelist(boss.url)) {
-      debug && console.log("whitelisted", boss.url);
       return;
     }
     try {
       delete tabs_in_action["tab" + active.id];
       delete tabs_in_action["tab" + boss.id];
-    } catch (e) {
-      debug && console.log("unable to delete ids", active.id, boss.id);
-    }
+    } catch (e) {}
     chrome.tabs.remove(active.id);
     chrome.tabs.update(boss.id, params);
     chrome.tabs.move(boss.id, {
@@ -100,12 +91,9 @@ function collapseAll() {
       for (var i in result) {
         tab = result[i];
         url = liteNormalize(tab.url, true);
-        console.log("url: " + url)
         if (!bossTabs[url]) {
           bossTabs[url] = tab;
           tabs_in_action["tab" + tab.id] = Date.now();
-          /*} else if (inWhitelist(url)) {
-          debug && console.log("whitelisted", active.url); */
         } else {
           if (tab.active) {
             chrome.tabs.update(bossTabs[url].id, {
@@ -132,12 +120,12 @@ function clearTabsInAction() {
     }
   }
   for (var i in tabs_to_delete) {
-    debug && console.log("cleaning... ", tabs_to_delete);
     delete tabs_in_action[tabs_to_delete];
   }
 }
 
 function onTabUpdate(tabId, changes, tab) {
+  console.log("changes", tabId, changes);
   if (!enabled) {
     return;
   }
@@ -153,10 +141,11 @@ function onTabCreated(tab) {
   var url = liteNormalize(tab.url, true);
   var attempt = 2;
   url += "*";
-  debug && console.log("queryInfo: url : " + url);
   var queryInfo = {
     'url': url
   };
+
+  console.log("crated tabId", tab.id);
   tabs_in_action["tab" + tab.id] = Date.now();
 
   function callback(result) {
@@ -172,9 +161,10 @@ function onTabCreated(tab) {
         chrome.tabs.query(queryInfo, callback);
       }
     }
+    console.log(queryInfo)
+    console.log(result)
     if (result && result.length > 0) {
       tabs = getBossAndActiveTabs(result);
-      debug && console.log('tabs', tabs);
       boss = tabs.boss;
       active = tabs.active;
       if (active) {
