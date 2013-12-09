@@ -45,7 +45,7 @@ function liteNormalize(url, slash) {
   if (url.indexOf("?") > 0) {
     url = url.substr(0, url.indexOf('?'));
   } else {
-    url = url.substr(0, url.lastIndexOf("/"));
+    //url = url.substr(0, url.lastIndexOf("/"));
   }
   if (slash) {
     if (url.charAt(url.length - 1) == "/") {
