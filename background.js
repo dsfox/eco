@@ -107,7 +107,6 @@ function clearTabsInAction() {
 }
 
 function onTabUpdate(tabId, changes, tab) {
-  console.log("changes", tabId, changes);
   if (!enabled) {
     return;
   }
@@ -135,13 +134,10 @@ function onTabCreated(tab) {
     'url': (url + "*")
   };
 
-  console.log("crated tabId", tab.id);
   tabs_in_action["tab" + tab.id] = Date.now();
 
   function callback(result) {
     var tabs, boss, active, pre_tabs = [];
-    console.log(queryInfo);
-    console.log(result);
     if (result && result.length > 0) {
       for (var i in result) {
         if (smartFilter(url, result[i].url)) {
