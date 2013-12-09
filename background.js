@@ -40,25 +40,6 @@ function getBossAndActiveTabs(tabs) {
   };
 }
 
-function liteNormalize(url, slash) {
-  //cut to path
-  if (url.indexOf("?") > 0) {
-    url = url.substr(0, url.indexOf('?'));
-  } else {
-    //url = url.substr(0, url.lastIndexOf("/"));
-  }
-  if (slash) {
-    if (url.charAt(url.length - 1) == "/") {
-      url = url.slice(0, url.length - 1);
-    }
-  } else {
-    if (url.charAt(url.length - 1) != "/") {
-      url += "/";
-    }
-  }
-  return url;
-}
-
 function eco(boss, active, opener) { //no opener dependencies yet
   var params = {
     selected: true,
@@ -85,12 +66,13 @@ function eco(boss, active, opener) { //no opener dependencies yet
 
 function collapseAll() {
   function callback(result) {
-    var tab, url;
+    var tab, uri, url;
     var bossTabs = {};
     if (result && result.length > 0) {
       for (var i in result) {
         tab = result[i];
-        url = liteNormalize(tab.url, true);
+        uri = new URI(tab.url);
+        url = uri.protocol() + '://' + uri.host() + uri.path();
         if (!bossTabs[url]) {
           bossTabs[url] = tab;
           tabs_in_action["tab" + tab.id] = Date.now();
@@ -134,51 +116,42 @@ function onTabUpdate(tabId, changes, tab) {
   }
 }
 
+function smartFilter(url1, url2) {
+  var uri1 = new URI(url1);
+  var uri2 = new URI(url2);
+  var rule1 = uri1.protocol() != uri2.protocol();
+  var rule2 = uri1.host() != uri2.host();
+  var rule3 = uri1.path() != uri2.path();
+  return !(rule1 || rule2 || rule3);
+}
+
 function onTabCreated(tab) {
   if (!enabled) {
     return;
   }
-  var url = liteNormalize(tab.url, true);
-  var attempt = 2;
-  url += "*";
+  var uri = new URI(tab.url);
+  var url = uri.protocol() + '://' + uri.host() + uri.path();
   var queryInfo = {
-    'url': url
+    'url': (url + "*")
   };
 
   console.log("crated tabId", tab.id);
   tabs_in_action["tab" + tab.id] = Date.now();
 
   function callback(result) {
-    var tabs, boss, active, openerId;
-    if (result.length == 0) {
-      attempt--;
-      if (attempt > 0) {
-        url = liteNormalize(tab.url, false);
-        url += "*";
-        queryInfo = {
-          'url': url
-        };
-        chrome.tabs.query(queryInfo, callback);
-      }
-    }
-    console.log(queryInfo)
-    console.log(result)
+    var tabs, boss, active, pre_tabs = [];
+    console.log(queryInfo);
+    console.log(result);
     if (result && result.length > 0) {
-      tabs = getBossAndActiveTabs(result);
+      for (var i in result) {
+        if (smartFilter(url, result[i].url)) {
+          pre_tabs.push(result[i]);
+        }
+      }
+      tabs = getBossAndActiveTabs(pre_tabs);
       boss = tabs.boss;
       active = tabs.active;
-      if (active) {
-        openerId = active.openerTabId;
-      } else {
-        active = boss;
-      }
-      if (openerId) {
-        chrome.tabs.get(openerId, function(tab) {
-          eco(boss, active, tab);
-        });
-      } else {
-        eco(boss, active, null);
-      }
+      eco(boss, active, null);
     }
   }
   chrome.tabs.query(queryInfo, callback);
