@@ -147,6 +147,12 @@ function onTabCreated(tab) {
       tabs = getBossAndActiveTabs(pre_tabs);
       boss = tabs.boss;
       active = tabs.active;
+      if (active &&
+        active.windowId != boss.windowId &&
+        active.url.indexOf("chrome://newtab") == 0 &&
+        active.index == 0) {
+        return;
+      }
       eco(boss, active, null);
     }
   }
@@ -160,7 +166,7 @@ chrome.tabs.onUpdated.addListener(onTabUpdate);
 
 function iconOnClick(tab) {
   enabled = !enabled;
-  localStorage.setItem("enabled", true);
+  localStorage.setItem("enabled", enabled);
   updateState(false);
 }
 
@@ -171,7 +177,6 @@ function updateState(firstRun) {
   };
 
   chrome.browserAction.setIcon(details, function() {});
-
   clearInterval(tabs_in_action_clear_timer);
   if (enabled) {
     tabs_in_action_clear_timer = setInterval(clearTabsInAction, tabs_in_action_clear_interval);
@@ -182,7 +187,6 @@ function updateState(firstRun) {
     clearTabsInAction();
   }
 }
-
 updateState(true);
 
 chrome.browserAction.onClicked.addListener(iconOnClick);
