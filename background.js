@@ -4,6 +4,7 @@ var tabs_in_action_clear_interval = 1 * 60 * 1000; //1 min
 var default_whitelist = ["http://yandex.ru/yandsearch", "https://yandex.ru/yandsearch", "https://www.google.ru/#", "https://www.google.com/#"];
 var enabled = localStorage.getItem("enabled") != "false";
 var whitelist = localStorage.getItem("whitelist");
+var default_url = "about:blank";
 
 if (!whitelist) {
   whitelist = default_whitelist;
@@ -71,7 +72,7 @@ function collapseAll() {
     if (result && result.length > 0) {
       for (var i in result) {
         tab = result[i];
-        uri = new URI(tab.url);
+        uri = new URI(tab.url ? tab.url : default_url);
         url = uri.protocol() + '://' + uri.host() + uri.path();
         if (!bossTabs[url]) {
           bossTabs[url] = tab;
@@ -106,33 +107,43 @@ function clearTabsInAction() {
   }
 }
 
+function onTabReplace(added_id, replaced_id) {
+  if (tabs_in_action.hasOwnProperty("tab" + replaced_id)) {
+    tabs_in_action["tab" + added_id] = tabs_in_action["tab" + replaced_id];
+    delete tabs_in_action["tab" + replaced_id];
+    console.log("onTabReplace", added_id, replaced_id);
+  }
+}
+
 function onTabUpdate(tabId, changes, tab) {
   if (!enabled) {
     return;
   }
   if (tabs_in_action.hasOwnProperty("tab" + tabId)) {
-    onTabCreated(tab);
+    onTabCreate(tab);
   }
 }
 
 function smartFilter(url1, url2) {
-  var uri1 = new URI(url1);
-  var uri2 = new URI(url2);
+  var uri1 = new URI(url1 ? url1 : default_url);
+  var uri2 = new URI(url2 ? url2 : default_url);
   var rule1 = uri1.protocol() != uri2.protocol();
   var rule2 = uri1.host() != uri2.host();
   var rule3 = uri1.path() != uri2.path();
   return !(rule1 || rule2 || rule3);
 }
 
-function onTabCreated(tab) {
+function onTabCreate(tab) {
   if (!enabled) {
     return;
   }
-  var uri = new URI(tab.url);
+  var uri = new URI(tab.url ? tab.url : default_url);
   var url = uri.protocol() + '://' + uri.host() + uri.path();
   var queryInfo = {
     'url': (url + "*")
   };
+
+  console.log("onTabCreate", tab);
 
   tabs_in_action["tab" + tab.id] = Date.now();
 
@@ -159,8 +170,9 @@ function onTabCreated(tab) {
   chrome.tabs.query(queryInfo, callback);
 
 }
-chrome.tabs.onCreated.addListener(onTabCreated);
+chrome.tabs.onCreated.addListener(onTabCreate);
 chrome.tabs.onUpdated.addListener(onTabUpdate);
+chrome.tabs.onReplaced.addListener(onTabReplace);
 
 //toolbar button actions
 
