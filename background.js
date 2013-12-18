@@ -119,7 +119,7 @@ function onTabUpdate(tabId, changes, tab) {
   if (!enabled) {
     return;
   }
-  if (tabs_in_action.hasOwnProperty("tab" + tabId)) {
+  if (tabs_in_action.hasOwnProperty("tab" + tabId) && changes.url) {
     onTabCreate(tab);
   }
 }
@@ -143,8 +143,6 @@ function onTabCreate(tab) {
     'url': (url + "*")
   };
 
-  console.log("onTabCreate", tab);
-
   tabs_in_action["tab" + tab.id] = Date.now();
 
   function callback(result) {
@@ -162,6 +160,9 @@ function onTabCreate(tab) {
         active.windowId != boss.windowId &&
         active.url.indexOf("chrome://newtab") == 0 &&
         active.index == 0) {
+        return;
+      }
+      if (!tabs_in_action.hasOwnProperty("tab" + active.id)) { //fix for async cases
         return;
       }
       eco(boss, active, null);
