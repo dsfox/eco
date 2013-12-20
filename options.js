@@ -1,4 +1,5 @@
 var whitelist;
+var default_protocol = "http://";
 var list = localStorage.getItem("whitelist");
 
 if (list && typeof list == "string") {
@@ -21,8 +22,22 @@ buttonClose.addEventListener("click", onClose, false);
 function onChange(event) {
   try {
     whitelist = event.target.value.replace(/ /g, '').split('\n');
-    console.log(whitelist)
+    normalizeWhitelist();
   } catch (e) {}
+}
+
+function normalizeWhitelist() {
+  var site;
+  try {
+    for (var i in whitelist) {
+      site = new URI(whitelist[i]);
+      if (site.protocol() == '') {
+        whitelist[i] = default_protocol + whitelist[i];
+      }
+    }
+  } catch (e) {
+    console.log("normalizeWhitelist FAIL", e);
+  }
 }
 
 function onClose(event) {
