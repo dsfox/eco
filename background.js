@@ -8,6 +8,9 @@ var default_url = "about:blank";
 
 if (!whitelist) {
   whitelist = default_whitelist;
+  localStorage.setItem("whitelist", whitelist);
+} else {
+  whitelist = whitelist.split(',');
 }
 
 function inWhitelist(url) {
@@ -174,6 +177,21 @@ function onTabCreate(tab) {
 chrome.tabs.onCreated.addListener(onTabCreate);
 chrome.tabs.onUpdated.addListener(onTabUpdate);
 chrome.tabs.onReplaced.addListener(onTabReplace);
+
+//options changed
+
+chrome.runtime.onMessage.addListener(
+  function(request, sender, sendResponse) {
+    if (request.oprions && request.options == "updated") {
+      whitelist = localStorage.getItem("whitelist");
+      if (!whitelist) {
+        whitelist = default_whitelist;
+        localStorage.setItem("whitelist", whitelist);
+      } else {
+        whitelist = whitelist.split(',');
+      }
+    }
+  });
 
 //toolbar button actions
 
