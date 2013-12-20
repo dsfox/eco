@@ -165,9 +165,6 @@ function onTabCreate(tab) {
         active.index == 0) {
         return;
       }
-      if (!tabs_in_action.hasOwnProperty("tab" + active.id)) { //fix for async cases
-        return;
-      }
       eco(boss, active, null);
     }
   }
