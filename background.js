@@ -115,7 +115,6 @@ function onTabReplace(added_id, replaced_id) {
     if (tabs_in_action.hasOwnProperty("tab" + replaced_id)) {
         tabs_in_action["tab" + added_id] = tabs_in_action["tab" + replaced_id];
         delete tabs_in_action["tab" + replaced_id];
-        console.log("onTabReplace", added_id, replaced_id);
     }
 }
 
@@ -182,7 +181,6 @@ chrome.tabs.onReplaced.addListener(onTabReplace);
 
 
 //custom contex menu
-console.log('TEST1');
 chrome.contextMenus.removeAll();
 chrome.contextMenus.create({
     title: chrome.i18n.getMessage("strict_mode"),
@@ -192,10 +190,8 @@ chrome.contextMenus.create({
     onclick: function(o) {
         strictMode = o.checked;
         localStorage.setItem("strictMode", strictMode);
-        console.log(strictMode);
     }
 });
-console.log('TEST2');
 
 //options changed
 
