@@ -1,8 +1,11 @@
 {
-  "options_text1": {
-    "message": "This pages are excluded from Eco processing"
-  },
-  "options_close": {
-    "message": "Save and close"
-  }
+    "options_text1": {
+        "message": "This pages are excluded from Eco processing"
+    },
+    "options_close": {
+        "message": "Save and close"
+    },
+    "strict_mode": {
+        "message": "Exact match URL"
+    }
 }

@@ -3,7 +3,7 @@ var default_protocol = "http://";
 var list = localStorage.getItem("whitelist");
 
 if (list && typeof list == "string") {
-  list = list.replace(/,/g, '\n');
+    list = list.replace(/,/g, '\n');
 }
 
 var sites = document.getElementById("sites");
@@ -20,32 +20,32 @@ buttonClose.addEventListener("click", onClose, false);
 //listeners
 
 function onChange(event) {
-  try {
-    whitelist = event.target.value.replace(/ /g, '').split('\n');
-    normalizeWhitelist();
-  } catch (e) {}
+    try {
+        whitelist = event.target.value.replace(/ /g, '').split('\n');
+        normalizeWhitelist();
+    } catch (e) {}
 }
 
 function normalizeWhitelist() {
-  var site;
-  try {
-    for (var i in whitelist) {
-      site = new URI(whitelist[i]);
-      if (site.protocol() == '') {
-        whitelist[i] = default_protocol + whitelist[i];
-      }
+    var site;
+    try {
+        for (var i in whitelist) {
+            site = new URI(whitelist[i]);
+            if (site.protocol() == '') {
+                whitelist[i] = default_protocol + whitelist[i];
+            }
+        }
+    } catch (e) {
+        console.log("normalizeWhitelist FAIL", e);
     }
-  } catch (e) {
-    console.log("normalizeWhitelist FAIL", e);
-  }
 }
 
 function onClose(event) {
-  if (whitelist) {
-    localStorage.setItem("whitelist", whitelist);
-    chrome.runtime.sendMessage({
-      "options": "updated"
-    });
-  }
-  window.close();
+    if (whitelist) {
+        localStorage.setItem("whitelist", whitelist);
+        chrome.runtime.sendMessage({
+            "options": "updated"
+        });
+    }
+    window.close();
 }
